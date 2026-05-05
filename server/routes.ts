@@ -53,15 +53,30 @@ const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-7";
 // turns can be summarized via the notebook if they matter).
 const CONTEXT_WINDOW = 60;
 
+/** Normalize a passphrase before comparing: trim whitespace + newlines,
+ * replace unicode dashes / smart quotes with their ASCII equivalents, and
+ * lowercase. The configured passphrase is normalized the same way so a
+ * stray space or smart-hyphen can't lock the operator out. */
+function normalizePass(s: string | undefined): string {
+  if (!s) return "";
+  return s
+    .trim()
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .toLowerCase();
+}
+
 function gate(passphrase: string | undefined) {
+  const expected = normalizePass(passphrase);
   return (req: Request, res: Response, next: NextFunction) => {
-    const supplied = (req.headers["x-office-pass"] || "").toString();
-    if (!passphrase) {
+    const supplied = normalizePass((req.headers["x-office-pass"] || "").toString());
+    if (!expected) {
       // If no passphrase is configured, fail closed — never run the office
       // open. Force the operator to set OFFICE_PASSPHRASE before deploying.
       return res.status(503).json({ ok: false, error: "office not configured" });
     }
-    if (supplied !== passphrase) {
+    if (supplied !== expected) {
       return res.status(401).json({ ok: false, error: "wrong pass" });
     }
     next();
@@ -76,9 +91,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // frontend uses it to *check* the passphrase). It accepts the candidate
   // pass in the body and returns ok if it matches.
   app.post("/api/auth/check", (req, res) => {
-    const tried = (req.body?.passphrase || "").toString();
     if (!passphrase) return res.status(503).json({ ok: false, error: "office not configured" });
-    res.json({ ok: tried === passphrase });
+    const tried = normalizePass((req.body?.passphrase || "").toString());
+    const expected = normalizePass(passphrase);
+    res.json({ ok: tried === expected });
   });
 
   // Health (gated; reveals nothing on auth failure).

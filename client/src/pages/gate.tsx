@@ -17,14 +17,27 @@ export default function GatePage({ onEnter }: { onEnter: (pass: string) => void 
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    if (!pass) return;
+    // Forgive common iOS / paste mishaps:
+    // - leading/trailing whitespace (auto-keyboard adds spaces, paste
+    //   sometimes drags a trailing newline)
+    // - smart quotes / smart hyphens that iOS substitutes when not in a
+    //   monospace context. We force-replace those back to plain ASCII.
+    // - lowercase mismatch (iOS auto-capitalizes the first char of a
+    //   field by default; the configured key is all lowercase).
+    const cleaned = pass
+      .trim()
+      .replace(/[\u2010-\u2015\u2212]/g, "-") // any unicode dash → plain hyphen
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .toLowerCase();
+    if (!cleaned) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/auth/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passphrase: pass }),
+        body: JSON.stringify({ passphrase: cleaned }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -32,8 +45,8 @@ export default function GatePage({ onEnter }: { onEnter: (pass: string) => void 
         setLoading(false);
         return;
       }
-      setOfficePassphrase(pass);
-      onEnter(pass);
+      setOfficePassphrase(cleaned);
+      onEnter(cleaned);
     } catch (err: any) {
       setError(err?.message || "couldn't reach the office");
       setLoading(false);
@@ -61,6 +74,12 @@ export default function GatePage({ onEnter }: { onEnter: (pass: string) => void 
             disabled={loading}
             data-testid="input-key"
             className="h-11 font-mono tracking-wider"
+            // Stop iOS from auto-capitalizing, auto-correcting, or
+            // smart-quoting the key as it's typed.
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="text"
           />
           {error && (
             <p className="text-xs text-destructive font-mono" data-testid="text-error">
