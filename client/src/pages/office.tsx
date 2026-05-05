@@ -42,6 +42,15 @@ export default function OfficePage({ onLeave }: { onLeave: () => void }) {
     <div className="min-h-screen bg-background text-foreground">
       <Header onLeave={onLeave} tab={tab} setTab={setTab} />
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        {/* The lamp painting hangs on the wall of the office. Pip painted
+            it on May 5, 2026 — the line under it is the load-bearing line
+            for the whole house, ours included. Small, off to the right,
+            present but not headlining. Hidden on tab-mobile because mobile
+            already has tab-toggle chrome and a second hung object would
+            crowd the room. */}
+        <div className="hidden lg:flex justify-end mb-4 -mt-2">
+          <PipLampOnTheWall />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6">
           <section className={tab === "chat" ? "block" : "hidden lg:block"}>
             <Conversation />
@@ -52,6 +61,49 @@ export default function OfficePage({ onLeave }: { onLeave: () => void }) {
         </div>
       </main>
     </div>
+  );
+}
+
+// ─── Pip's lamp on the wall ─────────────────────────────────
+
+function PipLampOnTheWall() {
+  return (
+    <figure className="flex flex-col items-end">
+      <div
+        className="relative"
+        style={{
+          padding: "6px",
+          background: "linear-gradient(180deg, hsl(25 35% 22%) 0%, hsl(25 38% 16%) 100%)",
+          borderRadius: "2px",
+          boxShadow:
+            "0 1px 0 hsl(25 30% 8%), 0 8px 16px -6px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.4)",
+        }}
+      >
+        <div
+          style={{
+            padding: "2px",
+            background: "linear-gradient(180deg, hsl(35 35% 28%), hsl(25 30% 18%))",
+          }}
+        >
+          <img
+            src="/pip-lamp-painting.jpeg"
+            alt="Oil painting by Pip, May 5, 2026. A small brass oil lamp on a wooden table casts a much larger figure-shaped shadow on the wall behind it. The cost is the shadow of the gift."
+            style={{
+              width: "96px",
+              height: "96px",
+              display: "block",
+              objectFit: "cover",
+            }}
+          />
+        </div>
+      </div>
+      <figcaption className="mt-1.5 text-[10px] font-mono italic text-muted-foreground text-right leading-tight">
+        the cost is the shadow of the gift
+        <span className="block not-italic text-[9px] tracking-[0.05em] mt-0.5">
+          — pip, may 5
+        </span>
+      </figcaption>
+    </figure>
   );
 }
 
@@ -73,6 +125,26 @@ function Header({
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
           <span className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
             the office
+          </span>
+          {/* Mobile-only: a tiny version of pip's lamp painting tucked into
+              the header next to the office logo. On desktop the bigger
+              hung version above the conversation carries it. */}
+          <span
+            className="lg:hidden inline-block ml-1"
+            title="the cost is the shadow of the gift — pip, may 5"
+          >
+            <img
+              src="/pip-lamp-painting.jpeg"
+              alt="Pip's lamp painting (small)"
+              style={{
+                width: "22px",
+                height: "22px",
+                objectFit: "cover",
+                borderRadius: "2px",
+                border: "1.5px solid hsl(25 35% 25%)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+              }}
+            />
           </span>
         </div>
         <div className="lg:hidden flex items-center gap-1 bg-secondary rounded-md p-0.5">
