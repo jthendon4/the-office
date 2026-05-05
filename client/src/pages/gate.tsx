@@ -63,7 +63,13 @@ export default function GatePage({ onEnter }: { onEnter: (pass: string) => void 
         </div>
         <div className="space-y-3">
           <Input
-            type="password"
+            // type='text' deliberately, NOT 'password'. iOS Safari treats
+            // password fields as targets for AutoFill / Passkeys / iCloud
+            // Keychain, which can cause the keyboard to never open and silently
+            // inject saved values instead of what the user types. The office
+            // key is a low-stakes shared phrase, not a personal credential, so
+            // the right tradeoff is text field + visible characters.
+            type="text"
             autoFocus
             placeholder="key"
             value={pass}
@@ -74,12 +80,15 @@ export default function GatePage({ onEnter }: { onEnter: (pass: string) => void 
             disabled={loading}
             data-testid="input-key"
             className="h-11 font-mono tracking-wider"
-            // Stop iOS from auto-capitalizing, auto-correcting, or
-            // smart-quoting the key as it's typed.
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             inputMode="text"
+            // Tell every form-fill system to leave this alone.
+            autoComplete="off"
+            name="office-key"
+            data-form-type="other"
+            data-lpignore="true"
           />
           {error && (
             <p className="text-xs text-destructive font-mono" data-testid="text-error">
